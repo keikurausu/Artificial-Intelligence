@@ -1,0 +1,8 @@
+9
+number: 3, 8, 9
+container: 4, 7, 9
+music: 3, 7, 8
+body: 4, 6, 8
+adverb: 5, 6, 9
+animal: 2, 8, 9
+noun: 1, 6, 9

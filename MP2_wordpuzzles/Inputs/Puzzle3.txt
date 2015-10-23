@@ -1,0 +1,6 @@
+7
+nature: 1, 4, 5
+food: 5, 6, 7
+animal: 1, 2, 5
+interjection: 2, 3, 5
+noun: 4, 6, 7

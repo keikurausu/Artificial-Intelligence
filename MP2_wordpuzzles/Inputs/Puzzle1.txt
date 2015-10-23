@@ -1,0 +1,7 @@
+9
+emotion: 4, 5, 7
+body: 3, 8, 9
+adverb: 1, 5, 9
+adjective: 2, 3, 9
+interjection: 4, 5, 6
+verb: 7, 8, 9
