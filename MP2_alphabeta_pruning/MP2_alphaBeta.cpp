@@ -1,13 +1,16 @@
-// MP2_minimax.cpp : Defines the entry point for the console application.
+//
+//  MP2_alphaBeta.cpp
+//  
+//
+//  Created by Ankush Aggarwal on 10/24/15.
+//
 //
 
-
-#include "MP2_minimax.h"
+#include "MP2_alphaBeta.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <ctime>
 #include <algorithm>
 
 using namespace std;
@@ -27,8 +30,6 @@ void setup_game(int x)
 	green_expanded = 0;
 	blue_number_moves = 0;
 	green_number_moves = 0;
-	blue_time = 0;
-	green_time = 0;
 	blue_score = 0;
 	green_score = 0;
 	blocks_occupied = 0;
@@ -41,15 +42,14 @@ void output_game(string filename)
 	ofstream outFile(filename.c_str());
 	if (outFile.is_open())
 	{
-		
-		outFile << "Player Blue expanded " << blue_expanded << " nodes" << endl;
-		outFile << "Player Green expanded " << green_expanded << " nodes" << endl;
-		average_number_moves = float(blue_expanded) / float(blue_number_moves);
-		outFile << "Average number of nodes expanded by blue per move: " << average_number_moves << endl;
-		average_number_moves = float(green_expanded) / float(green_number_moves);
-		outFile << "Average number of nodes expanded by green per move: " << average_number_moves << endl;
-		outFile << "Player Blue took " << blue_time << " milliseconds (" << float (blue_time) / float(blue_number_moves) << "ms per move)" << endl;
-		outFile << "Player Green took " << green_time << " milliseconds (" << float (green_time) / float(green_number_moves) << "ms per move)" << endl;
+		/*
+		 outFile << "Player Blue expanded " << blue_expanded << " nodes" << endl;
+		 outFile << "Player Green expanded " << green_expanded << " nodes" << endl;
+		 average_number_moves = float(blue_expanded) / float(blue_number_moves);
+		 outFile << "Average number of nodes expanded by blue per move: " << average_number_moves << endl;
+		 average_number_moves = float(green_expanded) / float(green_number_moves);
+		 outFile << "Average number of nodes expanded by green per move: " << average_number_moves << endl;
+		 */
 		outFile << "Blue total score: " << blue_score << endl;
 		outFile << "Green total score: " << green_score << endl;
 		for (int i = 0; i < GAME_DIMENSION; i++)
@@ -82,7 +82,7 @@ void play_game()
 	}
 	Type current_team = BLUE; //player blue goes first
 	Type opponent = GREEN;
-
+	
 	/*take turns going until there are no open spaces left*/
 	while (blocks_occupied < GAME_DIMENSION*GAME_DIMENSION)
 	{
@@ -95,23 +95,18 @@ void play_game()
 				game_copy[i][j].team = game[i][j].team;
 			}
 		}
+		max_val(game_copy, current_team, opponent, 1, x, y, 1000); //take turn -- once this function returns x and y will hold location of where to go next
 		
-		clock_t start = clock();
-		max_val(game_copy, current_team, opponent, 1, x, y); //take turn -- once this function returns x and y will hold location of where to go next
-		clock_t turn_time = (clock() - start)/(CLOCKS_PER_SEC/1000);
-														  //first act as if it is a para drop
+		//first act as if it is a para drop
 		blocks_occupied++;
 		game[y][x].team = current_team;
 		if (current_team == BLUE)
 		{
 			blue_score += game[y][x].value;
-			blue_time += turn_time;
-			
 		}
-		else if (current_team == GREEN)
+		else
 		{
 			green_score += game[y][x].value;
-			green_time += turn_time;
 		}
 		//check for neighbors
 		if ((y > 0 && game[y - 1][x].team == current_team) || (y < GAME_DIMENSION - 1 && game[y + 1][x].team == current_team) || (x > 0 && game[y][x - 1].team == current_team) || (x < GAME_DIMENSION - 1 && game[y][x + 1].team == current_team))
@@ -129,7 +124,7 @@ void play_game()
 					green_score += game[y - 1][x].value;
 					blue_score -= game[y - 1][x].value;
 				}
-
+				
 			}
 			if (y < GAME_DIMENSION - 1 && game[y + 1][x].team == opponent)
 			{
@@ -178,13 +173,11 @@ void play_game()
 		{
 			current_team = GREEN;
 			opponent = BLUE;
-			blue_number_moves += 1;
 		}
 		else
 		{
 			current_team = BLUE;
 			opponent = GREEN;
-			green_number_moves += 1;
 		}
 	}
 	//memory cleanup
@@ -193,14 +186,13 @@ void play_game()
 		delete[] game_copy[i];
 	}
 	delete[] game_copy;
-
+	
 }
 
-int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y)
+int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int upper_limit)
 {
 	int best = -1000; //best value so far is held here
 	int best_evaluation = -1000; //used for evaluation function
-	
 	for (int i = 0; i < GAME_DIMENSION; i++)
 	{
 		for (int j = 0; j < GAME_DIMENSION; j++)
@@ -210,13 +202,6 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 			{
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//set location values which will be sent back
 					x = j;
 					y = i;
@@ -252,13 +237,6 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int y_loc;
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//MAKE COPY EACH TIME
 					block** copy = new block*[GAME_DIMENSION];
 					for (int k = 0; k < GAME_DIMENSION; k++)
@@ -295,7 +273,7 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 							copy[i][j + 1].team = Max_team;
 						}
 					}
-					local_best = min_val(copy, Max_team, Min_team, depth + 1, x_loc, y_loc);
+					local_best = min_val(copy, Max_team, Min_team, depth + 1, x_loc, y_loc, best);
 					
 					//update best location
 					if (local_best > best)
@@ -319,13 +297,6 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int min_total = 0;
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//MAKE COPY EACH TIME
 					int local_best;
 					block** copy = new block*[GAME_DIMENSION];
@@ -363,7 +334,7 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 							copy[i][j + 1].team = Max_team;
 						}
 					}
-
+					
 					/*add up all current values on board of max_team and min_team and compute the difference*/
 					for (int k = 0; k < GAME_DIMENSION; k++)
 					{
@@ -386,6 +357,10 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 						x = j;
 						y = i;
 					}
+					
+					if (local_best >= upper_limit) {
+						return local_best;
+					}
 					//memory cleanup
 					for (int k = 0; k < GAME_DIMENSION; k++)
 					{
@@ -404,14 +379,13 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 	{
 		return best_evaluation;
 	}
-
+	
 }
 
-int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y)
+int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int lower_limit)
 {
 	int best = 1000; //best value (in this case lowest value) so far is held here
 	int best_evaluation = 1000; //used for evaluation function
-	
 	for (int i = 0; i < GAME_DIMENSION; i++)
 	{
 		for (int j = 0; j < GAME_DIMENSION; j++)
@@ -421,13 +395,6 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 			{
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//set location values which will be sent back
 					x = j;
 					y = i;
@@ -463,13 +430,6 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int y_loc;
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//MAKE COPY EACH TIME
 					block** copy = new block*[GAME_DIMENSION];
 					for (int k = 0; k < GAME_DIMENSION; k++)
@@ -506,8 +466,11 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 							copy[i][j + 1].team = Min_team;
 						}
 					}
-					local_best = max_val(copy, Max_team, Min_team, depth + 1, x_loc, y_loc);
-
+					local_best = max_val(copy, Max_team, Min_team, depth + 1, x_loc, y_loc, best);
+					
+					if (local_best <= lower_limit) {
+						return local_best;
+					}
 					//update best location if necessary
 					if (local_best < best)
 					{
@@ -530,13 +493,6 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int min_total = 0;
 				if (game_board[i][j].team == OPEN)
 				{
-					// This open node will be expanded.
-					if (Max_team == BLUE) {
-						blue_expanded += 1;
-					} else if (Max_team == GREEN) {
-						green_expanded += 1;
-					}
-					
 					//MAKE COPY EACH TIME
 					int local_best;
 					block** copy = new block*[GAME_DIMENSION];
@@ -574,7 +530,7 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 							copy[i][j + 1].team = Min_team;
 						}
 					}
-
+					
 					/*add up all current values on board of max_team and min_team and compute the difference*/
 					for (int k = 0; k < GAME_DIMENSION; k++)
 					{
@@ -625,34 +581,33 @@ int main()
 	{
 		game[i] = new block[GAME_DIMENSION];
 	}
-
+	
 	//play game using Keren map
 	setup_game(0);
-	output_game("minimax_outputs/Keren_output.txt");
-
+	output_game("alphabeta_outputs/Keren_output.txt");
+	
 	//play game using Narvik map
 	setup_game(1);
-	output_game("minimax_outputs/Narvik_output.txt");
-
+	output_game("alphabeta_outputs/Narvik_output.txt");
+	
 	//play game using Sevastopol map
 	setup_game(2);
-	output_game("minimax_outputs/Sevastopol_output.txt");
-
+	output_game("alphabeta_outputs/Sevastopol_output.txt");
+	
 	//play game using Smolensk map
 	setup_game(3);
-	output_game("minimax_outputs/Smolesnk_output.txt");
-
+	output_game("alphabeta_outputs/Smolesnk_output.txt");
+	
 	//play game using Westerplatte map
 	setup_game(4);
-	output_game("minimax_outputs/Westerplatte_output.txt");
-
+	output_game("alphabeta_outputs/Westerplatte_output.txt");
+	
 	//memory cleanup
 	for (int i = 0; i < GAME_DIMENSION; i++)
 	{
 		delete[] game[i];
 	}
 	delete[] game;
-
+	
 	return 0;
 }
-

@@ -1,5 +1,13 @@
-#ifndef MP2_MINIMAX_H
-#define MP2_MINIMAX_H
+//
+//  MP2_alphaBeta.hpp
+//  
+//
+//  Created by Ankush Aggarwal on 10/24/15.
+//
+//
+
+#ifndef MP2_alphaBeta_h
+#define MP2_alphaBeta_h
 
 #define GAME_DIMENSION 6
 
@@ -19,8 +27,8 @@ public:
 void setup_game(int x);
 void output_game(string filename);
 void play_game();
-int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y);
-int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y);
+int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int upper_limit);
+int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int lower_limit);
 
 
 block** game;  //pointer to array of gameboard blocks
@@ -31,13 +39,11 @@ int green_number_moves = 0;
 float average_number_moves;
 int blue_score = 0;
 int green_score = 0;
-double blue_time = 0;
-double green_time = 0;
 int blocks_occupied = 0; //keeps track of number of blocks which are not OPEN
 
 
 
-						 /*holds value data for each location of the 5 game boards*/
+/*holds value data for each location of the 5 game boards*/
 int gameboard[5][6][6] =
 {
 	//Keren
