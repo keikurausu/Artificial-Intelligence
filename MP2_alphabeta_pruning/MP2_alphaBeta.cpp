@@ -30,6 +30,8 @@ void setup_game(int x)
 	green_expanded = 0;
 	blue_number_moves = 0;
 	green_number_moves = 0;
+	blue_time = 0;
+	green_time = 0;
 	blue_score = 0;
 	green_score = 0;
 	blocks_occupied = 0;
@@ -42,14 +44,14 @@ void output_game(string filename)
 	ofstream outFile(filename.c_str());
 	if (outFile.is_open())
 	{
-		/*
-		 outFile << "Player Blue expanded " << blue_expanded << " nodes" << endl;
-		 outFile << "Player Green expanded " << green_expanded << " nodes" << endl;
-		 average_number_moves = float(blue_expanded) / float(blue_number_moves);
-		 outFile << "Average number of nodes expanded by blue per move: " << average_number_moves << endl;
-		 average_number_moves = float(green_expanded) / float(green_number_moves);
-		 outFile << "Average number of nodes expanded by green per move: " << average_number_moves << endl;
-		 */
+		outFile << "Player Blue expanded " << blue_expanded << " nodes" << endl;
+		outFile << "Player Green expanded " << green_expanded << " nodes" << endl;
+		average_number_moves = float(blue_expanded) / float(blue_number_moves);
+		outFile << "Average number of nodes expanded by blue per move: " << average_number_moves << endl;
+		average_number_moves = float(green_expanded) / float(green_number_moves);
+		outFile << "Average number of nodes expanded by green per move: " << average_number_moves << endl;
+		outFile << "Player Blue took " << blue_time << " milliseconds (" << float (blue_time) / float(blue_number_moves) << "ms per move)" << endl;
+		outFile << "Player Green took " << green_time << " milliseconds (" << float (green_time) / float(green_number_moves) << "ms per move)" << endl;
 		outFile << "Blue total score: " << blue_score << endl;
 		outFile << "Green total score: " << green_score << endl;
 		for (int i = 0; i < GAME_DIMENSION; i++)
@@ -95,7 +97,10 @@ void play_game()
 				game_copy[i][j].team = game[i][j].team;
 			}
 		}
-		max_val(game_copy, current_team, opponent, 1, x, y, 1000); //take turn -- once this function returns x and y will hold location of where to go next
+		
+		clock_t start = clock();
+		max_val(game_copy, current_team, opponent, 1, x, y, 0); //take turn -- once this function returns x and y will hold location of where to go next
+		clock_t turn_time = (clock() - start)/(CLOCKS_PER_SEC/1000);
 		
 		//first act as if it is a para drop
 		blocks_occupied++;
@@ -103,10 +108,12 @@ void play_game()
 		if (current_team == BLUE)
 		{
 			blue_score += game[y][x].value;
+			blue_time += turn_time;
 		}
 		else
 		{
 			green_score += game[y][x].value;
+			green_time += turn_time;
 		}
 		//check for neighbors
 		if ((y > 0 && game[y - 1][x].team == current_team) || (y < GAME_DIMENSION - 1 && game[y + 1][x].team == current_team) || (x > 0 && game[y][x - 1].team == current_team) || (x < GAME_DIMENSION - 1 && game[y][x + 1].team == current_team))
@@ -173,11 +180,13 @@ void play_game()
 		{
 			current_team = GREEN;
 			opponent = BLUE;
+			blue_number_moves += 1;
 		}
 		else
 		{
 			current_team = BLUE;
 			opponent = GREEN;
+			green_number_moves += 1;
 		}
 	}
 	//memory cleanup
@@ -202,6 +211,12 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 			{
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//set location values which will be sent back
 					x = j;
 					y = i;
@@ -237,6 +252,12 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int y_loc;
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//MAKE COPY EACH TIME
 					block** copy = new block*[GAME_DIMENSION];
 					for (int k = 0; k < GAME_DIMENSION; k++)
@@ -297,6 +318,12 @@ int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int min_total = 0;
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//MAKE COPY EACH TIME
 					int local_best;
 					block** copy = new block*[GAME_DIMENSION];
@@ -395,6 +422,12 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 			{
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//set location values which will be sent back
 					x = j;
 					y = i;
@@ -430,6 +463,12 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int y_loc;
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//MAKE COPY EACH TIME
 					block** copy = new block*[GAME_DIMENSION];
 					for (int k = 0; k < GAME_DIMENSION; k++)
@@ -493,6 +532,12 @@ int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x,
 				int min_total = 0;
 				if (game_board[i][j].team == OPEN)
 				{
+					// This open node will be expanded.
+					if (Max_team == BLUE) {
+						blue_expanded += 1;
+					} else if (Max_team == GREEN) {
+						green_expanded += 1;
+					}
 					//MAKE COPY EACH TIME
 					int local_best;
 					block** copy = new block*[GAME_DIMENSION];

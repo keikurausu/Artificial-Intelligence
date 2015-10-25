@@ -39,8 +39,9 @@ int green_number_moves = 0;
 float average_number_moves;
 int blue_score = 0;
 int green_score = 0;
+double blue_time = 0;
+double green_time = 0;
 int blocks_occupied = 0; //keeps track of number of blocks which are not OPEN
-
 
 
 /*holds value data for each location of the 5 game boards*/
