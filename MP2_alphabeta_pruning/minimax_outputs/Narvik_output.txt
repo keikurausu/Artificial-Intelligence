@@ -1,8 +1,0 @@
-Blue total score: 1199
-Green total score: 601
-BBBBBG
-BGBBBB
-GGGGBB
-GGBBBB
-GGBBBB
-GGBBGB
