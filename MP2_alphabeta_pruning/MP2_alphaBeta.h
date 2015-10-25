@@ -15,6 +15,7 @@
 using namespace std;
 
 enum Type { BLUE, GREEN, OPEN };
+enum search_type { AB, MM };
 
 /*holds data for each block on the gameboard*/
 class block
@@ -24,11 +25,13 @@ public:
 	Type team;
 };
 
-void setup_game(int x);
+void setup_game(int x, search_type blue_search, search_type green_search);
 void output_game(string filename);
-void play_game();
-int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int upper_limit);
-int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int lower_limit);
+void play_game(search_type blue_search, search_type green_search);
+int max_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int upper_limit);
+int min_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y, int lower_limit);
+int max_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y);
+int min_val(block** game_board, Type Max_team, Type Min_team, int depth, int& x, int& y);
 
 
 block** game;  //pointer to array of gameboard blocks
@@ -36,7 +39,7 @@ int blue_expanded = 0; //keeps track of total expanded nodes by blue
 int green_expanded = 0; //keeps track of total expanded nodes by green
 int blue_number_moves = 0;
 int green_number_moves = 0;
-float average_number_moves;
+float average_number_moves = 0;
 int blue_score = 0;
 int green_score = 0;
 double blue_time = 0;
