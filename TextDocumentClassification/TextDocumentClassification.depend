@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1447429498 source:c:\users\caleb\desktop\textdocumentclassification\main.cpp
+	<map>
+	<iostream>
+	<fstream>
+	<math.h>
+	<string>
+	<cstring>
+	<cstdlib>
+
