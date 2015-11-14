@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 using namespace std;
-
+#define NUM_CLASS_LABEL 2
 #define NUM_EMAIL_TRAINING 700
 #define NUM_EMAIL_TEST 260
 #define SPAM 1
@@ -25,6 +25,12 @@ map<string, double> spam; //holds log of spam word probabilities
 map<string, double> Nspam;
 map<string, double> Positive;
 map<string, double> Negative;
+double confusion_matrix[NUM_CLASS_LABEL][NUM_CLASS_LABEL];
+/*		   Nspam Spam
+	NSpam   +1
+	Spam		  +1
+	Left hand labels are actual type. Top labels are what we classified it as.
+*/
 int EmailWords = 0; //number of unique words in email training docs
 int MovieWords = 0;
 int SpamWords = 0; //number of total spam words in spam doc
@@ -34,6 +40,8 @@ int PositiveWords = 0;
 double numCorrect = 0; //number of correct classification
 double SpamCount = 0; // count the number of spam labels
 double NSpamCount = 0;
+double TestSpamCount;
+double TestNSpamCount;
 
 /*imports data from training documents and calculates multinomial likelihoods*/
 void process_training_multinomial(string filename, int x)
@@ -56,6 +64,10 @@ void process_training_multinomial(string filename, int x)
 				getline(inFile, line);
 				size_t end;
 				type = atoi(line.c_str()); //get label
+				if(type == NSPAM)
+					NSpamCount += 1;
+				else if(type == SPAM)
+					SpamCount += 1; //increment spam count
 				idx = 2;
 				while (1)
 				{
@@ -66,7 +78,6 @@ void process_training_multinomial(string filename, int x)
 					/*not spam case*/
 					if (type == NSPAM)
 					{
-						NSpamCount += 1;
 						ret = Nspam.insert(pair<string, double>(word, K + number)); //insert word into the dictionary with K value added to number
 						if (ret.second == false)
 						{
@@ -82,7 +93,6 @@ void process_training_multinomial(string filename, int x)
 					/*spam case*/
 					else if (type == SPAM)
 					{
-						SpamCount += 1; //increment spam count
 						ret = spam.insert(pair<string, int>(word, K + number));
 						if (ret.second == false)
 						{
@@ -191,8 +201,8 @@ void process_training_multinomial(string filename, int x)
 	}
 }
 
-/*imports test data and estimates the conditional probabilities for multinomial*/
-void test_multinomial(string filename, int x)
+/*imports test data and estimates the conditional probabilities for Naive Bayes*/
+void test_Naive_Bayes(string filename, int x)
 {
 	ifstream inFile(filename.c_str());
 	if (inFile.is_open())
@@ -202,18 +212,31 @@ void test_multinomial(string filename, int x)
 		string word;
 		int number;
 		int type; //label
-
+		/*initialize confusion matrix*/
+		for (int j = 0; j < NUM_CLASS_LABEL; j++)
+		{
+			for (int k = 0; k < NUM_CLASS_LABEL; k++)
+			{
+				confusion_matrix[j][k] = 0.0;
+			}
+		}
 		/*email case*/
 		if (x == 0)
 		{
 			numCorrect = 0;
 			double spamProb;
 			double NspamProb;
+			TestSpamCount = 0;
+			TestNSpamCount = 0;
 			for (int i = 0; i < NUM_EMAIL_TEST; i++)
 			{
 				getline(inFile, line);
 				size_t end;
 				type = atoi(line.c_str()); //get label
+				if (type == SPAM)
+					TestSpamCount += 1;
+				else if (type == NSPAM)
+					TestNSpamCount += 1;
 				idx = 2;
 				spamProb = SpamPrior;
 				NspamProb = NSpamPrior;
@@ -241,16 +264,43 @@ void test_multinomial(string filename, int x)
 						break;
 					idx++;
 				}
+				/*classify according to the conditional probability computed and build confusion matrix*/
 				if (spamProb > NspamProb && type == SPAM)
 				{
 					numCorrect++; //we got it right!
+					confusion_matrix[SPAM][SPAM] += 1;
 				}
-				else if (spamProb < NspamProb && type == NSPAM)
+				else if (spamProb <= NspamProb && type == SPAM)
+				{
+					confusion_matrix[SPAM][NSPAM] += 1;
+				}
+				else if (spamProb <= NspamProb && type == NSPAM)
 				{
 					numCorrect++;
+					confusion_matrix[NSPAM][NSPAM] += 1;
+				}
+				else if (spamProb > NspamProb && type == NSPAM)
+				{
+					confusion_matrix[NSPAM][SPAM] += 1;
 				}
 			}
 			cout << "Accuracy for email set " << 100 * numCorrect / NUM_EMAIL_TEST << "%" << endl; //classification accurracy
+			cout << "Confusion Matrix:  Top row 'NON spam label' Bottom Row 'spam label'" << endl << "L Column 'classified as NON spam' R Column 'classified as spam'" << endl;
+			for (int ii = 0; ii < NUM_CLASS_LABEL; ii++)
+			{
+				for (int jj = 0; jj < NUM_CLASS_LABEL; jj++)
+				{
+					if (ii == NSPAM)
+					{
+						cout << confusion_matrix[ii][jj] / TestNSpamCount * 100 << "% ";
+					}
+					else if(ii == SPAM)
+					{
+						cout << confusion_matrix[ii][jj] / TestSpamCount * 100 << "% ";
+					}
+				}
+				cout << endl;
+			}
 		}
 		/*movie review case*/
 		else if (x == 1)
@@ -293,18 +343,36 @@ void test_multinomial(string filename, int x)
 						break;
 					idx++;
 				}
-				//cout << spamProb << endl;
-				//cout << NspamProb << endl;
+				/*classify according to the conditional probability computed and build confusion matrix*/
 				if (negativeProb > positiveProb && type == NEGATIVE_REVIEW)
 				{
 					numCorrect++; //we got it right!
+					confusion_matrix[SPAM][SPAM] += 1;
 				}
-				else if (negativeProb < positiveProb && type == POSITIVE_REVIEW)
+				else if (negativeProb <= positiveProb && type == NEGATIVE_REVIEW)
+				{
+					confusion_matrix[SPAM][NSPAM] += 1;
+				}
+				else if (negativeProb <= positiveProb && type == POSITIVE_REVIEW)
 				{
 					numCorrect++;
+					confusion_matrix[NSPAM][NSPAM] += 1;
+				}
+				else if (negativeProb > positiveProb && type == POSITIVE_REVIEW)
+				{
+					confusion_matrix[NSPAM][SPAM] += 1;
 				}
 			}
 			cout << "Accuracy for movie set " << 100 * numCorrect / NUM_MOVIE_TEST << "%" << endl; //classification accurracy
+			cout << "Confusion Matrix:  Top row 'P review label' Bottom row 'N review label'" << endl << "L Column 'classified as P review' R Column 'classified as N review" << endl;
+			for (int ii = 0; ii < NUM_CLASS_LABEL; ii++)
+			{
+				for (int jj = 0; jj < NUM_CLASS_LABEL; jj++)
+				{
+					cout << confusion_matrix[ii][jj]/(NUM_MOVIE_TEST/2)*100 << "% ";
+				}
+				cout << endl;
+			}
 		}
 	}
 	else
@@ -436,7 +504,7 @@ void process_training_Bernoulli(string filename, int x)
 			map<string, double>::iterator it;
 			for (it = Negative.begin(); it != Negative.end(); ++it)
 			{
-				it->second = log(it->second / (NUM_MOVIE_TRAINING/2 + K)); //use log so we don't get underflow. K term is for laplace smoothing
+				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K)); //use log so we don't get underflow. K term is for laplace smoothing
 			}
 			for (it = Positive.begin(); it != Positive.end(); ++it)
 			{
@@ -472,7 +540,11 @@ void print_best_20(int x)
 					max = it->first;
 				}
 			}
-			cout << max << ", ";
+			cout << max;
+			if(i!= 19)
+                cout << ", ";
+            if(i == 9)
+                cout << endl;
 			spam.erase(max);
 		}
 		cout << endl << "Most likely 20 words in NON spam class are from most likely to less likely:" << endl;
@@ -489,7 +561,11 @@ void print_best_20(int x)
 					max = it->first;
 				}
 			}
-			cout << max << ", ";
+			cout << max;
+			if(i!= 19)
+                cout << ", ";
+            if(i == 9)
+                cout << endl;
 			Nspam.erase(max);
 		}
 		cout << endl;
@@ -516,7 +592,11 @@ void print_best_20(int x)
 					max = it->first;
 				}
 			}
-			cout << max << ", ";
+			cout << max;
+			if(i!= 19)
+                cout << ", ";
+            if(i == 9)
+                cout << endl;
 			Negative.erase(max);
 		}
 		cout << endl << "Most likely 20 words in Positive review class are from most likely to less likely:" << endl;
@@ -533,7 +613,11 @@ void print_best_20(int x)
 					max = it->first;
 				}
 			}
-			cout << max << ", ";
+			cout << max;
+			if(i!= 19)
+                cout << ", ";
+            if(i == 9)
+                cout << endl;
 			Positive.erase(max);
 		}
 		cout << endl;
@@ -549,25 +633,25 @@ int main()
 	/*multinomial email datasets*/
 	cout << "Multinomial email case:" << endl;
 	process_training_multinomial("train_email.txt", 0);
-	test_multinomial("test_email.txt", 0);
+	test_Naive_Bayes("test_email.txt", 0);
 	print_best_20(0);
 
 	/*multinomial movie datasets*/
-	cout << "Multinomial movie case:" << endl;
+	cout << endl << "Multinomial movie case:" << endl;
 	process_training_multinomial("rt-train.txt", 1);
-	test_multinomial("rt-test.txt", 1);
+	test_Naive_Bayes("rt-test.txt", 1);
 	print_best_20(1);
 
 	/*Bernoulli email datasets*/
-	cout << "Bernoulli email case:" << endl;
+	cout << endl << "Bernoulli email case:" << endl;
 	process_training_Bernoulli("train_email.txt", 0);
-	test_multinomial("test_email.txt", 0);
+	test_Naive_Bayes("test_email.txt", 0);
 	print_best_20(0);
 
 	/*Bernoulli movie datasets*/
-	cout << "Bernoulli movie case:" << endl;
+	cout << endl << "Bernoulli movie case:" << endl;
 	process_training_Bernoulli("rt-train.txt", 1);
-	test_multinomial("rt-test.txt", 1);
+	test_Naive_Bayes("rt-test.txt", 1);
 	print_best_20(1);
 
 	return 0;
