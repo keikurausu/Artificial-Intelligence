@@ -32,8 +32,10 @@ int NSpamWords = 0;
 int NegativeWords = 0;
 int PositiveWords = 0;
 double numCorrect = 0; //number of correct classification
+double SpamCount = 0; // count the number of spam labels
+double NSpamCount = 0;
 
-/*imports data from training documents and calculates likelihoods*/
+/*imports data from training documents and calculates multinomial likelihoods*/
 void process_training_multinomial(string filename, int x)
 {
 	ifstream inFile(filename.c_str());
@@ -49,8 +51,6 @@ void process_training_multinomial(string filename, int x)
 		/*email case*/
 		if (x == 0)
 		{
-			double SpamCount = 0; // count the number of spam labels
-			double NSpamCount = 0;
 			for (int i = 0; i < NUM_EMAIL_TRAINING; i++)
 			{
 				getline(inFile, line);
@@ -191,7 +191,7 @@ void process_training_multinomial(string filename, int x)
 	}
 }
 
-/**/
+/*imports test data and estimates the conditional probabilities for multinomial*/
 void test_multinomial(string filename, int x)
 {
 	ifstream inFile(filename.c_str());
@@ -206,12 +206,12 @@ void test_multinomial(string filename, int x)
 		/*email case*/
 		if (x == 0)
 		{
+			numCorrect = 0;
 			double spamProb;
 			double NspamProb;
 			for (int i = 0; i < NUM_EMAIL_TEST; i++)
 			{
 				getline(inFile, line);
-				size_t size = line.size();
 				size_t end;
 				type = atoi(line.c_str()); //get label
 				idx = 2;
@@ -261,7 +261,6 @@ void test_multinomial(string filename, int x)
 			for (int i = 0; i < NUM_MOVIE_TEST; i++)
 			{
 				getline(inFile, line);
-				size_t size = line.size();
 				size_t end;
 				type = atoi(line.c_str()); //get label
 				if (type == NEGATIVE_REVIEW)
@@ -314,6 +313,144 @@ void test_multinomial(string filename, int x)
 	}
 }
 
+/*imports data from training documents and calculates the Bernoulli likelihoods*/
+void process_training_Bernoulli(string filename, int x)
+{
+	ifstream inFile(filename.c_str());
+	if (inFile.is_open())
+	{
+		string line; //holds current line of document being processed
+		size_t idx = 0; //holds current index in line
+		string word;
+		int number;
+		int type; //label
+		pair<map<string, double>::iterator, bool> ret;
+
+		/*email case*/
+		if (x == 0)
+		{
+			for (int i = 0; i < NUM_EMAIL_TRAINING; i++)
+			{
+				getline(inFile, line);
+				size_t end;
+				type = atoi(line.c_str()); //get label
+				idx = 2;
+				while (1)
+				{
+					end = line.find(":", idx);
+					word = line.substr(idx, end - idx);
+					/*not spam case*/
+					if (type == NSPAM)
+					{
+						ret = Nspam.insert(pair<string, double>(word, K + 1)); //insert word into the dictionary with K value added to number
+						if (ret.second == false)
+						{
+							ret.first->second += 1; //if already existed just add 1
+						}
+						else
+						{
+							spam.insert(pair<string, double>(word, K)); //insert word into the spam dictionary with value K so we know we have seen it before
+						}
+					}
+					/*spam case*/
+					else if (type == SPAM)
+					{
+						ret = spam.insert(pair<string, int>(word, K + 1));
+						if (ret.second == false)
+						{
+							ret.first->second += 1;
+						}
+						else
+						{
+							Nspam.insert(pair<string, int>(word, K));
+						}
+					}
+					idx = line.find(" ", idx);
+					if (idx == string::npos)
+						break;
+					idx++;
+				}
+			}
+			/*calculate word probabilities*/
+			map<string, double>::iterator it;
+			for (it = spam.begin(); it != spam.end(); ++it)
+			{
+				it->second = log(it->second / (SpamCount + K)); //use log so we don't get underflow. K term is for laplace smoothing
+			}
+			for (it = Nspam.begin(); it != Nspam.end(); ++it)
+			{
+				it->second = log(it->second / (NSpamCount + K));
+			}
+		}
+
+		/*movie review case*/
+		else if (x == 1)
+		{
+			for (int i = 0; i < NUM_MOVIE_TRAINING; i++)
+			{
+				getline(inFile, line);
+				size_t end;
+				type = atoi(line.c_str()); //get label
+				if (type == NEGATIVE_REVIEW)
+					idx = 3; //account for - character
+				else
+					idx = 2;
+
+				while (1)
+				{
+					end = line.find(":", idx);
+					word = line.substr(idx, end - idx);
+					/*negative review case*/
+					if (type == NEGATIVE_REVIEW)
+					{
+						ret = Negative.insert(pair<string, double>(word, K + 1)); //insert word into the dictionary with K value added to number
+						if (ret.second == false)
+						{
+							ret.first->second += 1; //if already existed just add appropriate value to current sum
+						}
+						else
+						{
+							Positive.insert(pair<string, double>(word, K)); //insert word into the positive dictionary with value K so we know we have seen it before
+						}
+					}
+					/*positive review case*/
+					else if (type == POSITIVE_REVIEW)
+					{
+						ret = Positive.insert(pair<string, int>(word, K + 1));
+						if (ret.second == false)
+						{
+							ret.first->second += 1;
+						}
+						else
+						{
+							Negative.insert(pair<string, int>(word, K));
+						}
+					}
+					idx = line.find(" ", idx);
+					if (idx == string::npos)
+						break;
+					idx++;
+				}
+			}
+			/*calculate word probabilities*/
+			map<string, double>::iterator it;
+			for (it = Negative.begin(); it != Negative.end(); ++it)
+			{
+				it->second = log(it->second / (NUM_MOVIE_TRAINING/2 + K)); //use log so we don't get underflow. K term is for laplace smoothing
+			}
+			for (it = Positive.begin(); it != Positive.end(); ++it)
+			{
+				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K));
+			}
+		}
+	}
+	else
+	{
+		cout << "Error opening training doc" << endl;
+	}
+}
+
+/*prints the 20 most likely words from each case*/
 void print_best_20(int x)
 {
 	if (x == 0)
@@ -406,13 +543,30 @@ void print_best_20(int x)
 	}
 }
 
+
 int main()
 {
-	process_training_multinomial("train_email.txt", 0); //import email training datasets
+	/*multinomial email datasets*/
+	cout << "Multinomial email case:" << endl;
+	process_training_multinomial("train_email.txt", 0);
 	test_multinomial("test_email.txt", 0);
 	print_best_20(0);
 
-	process_training_multinomial("rt-train.txt", 1); //import movie training datasets
+	/*multinomial movie datasets*/
+	cout << "Multinomial movie case:" << endl;
+	process_training_multinomial("rt-train.txt", 1);
+	test_multinomial("rt-test.txt", 1);
+	print_best_20(1);
+
+	/*Bernoulli email datasets*/
+	cout << "Bernoulli email case:" << endl;
+	process_training_Bernoulli("train_email.txt", 0);
+	test_multinomial("test_email.txt", 0);
+	print_best_20(0);
+
+	/*Bernoulli movie datasets*/
+	cout << "Bernoulli movie case:" << endl;
+	process_training_Bernoulli("rt-train.txt", 1);
 	test_multinomial("rt-test.txt", 1);
 	print_best_20(1);
 
