@@ -26,7 +26,7 @@ double digit_probability[10];
 //first dimension for digit class, second(rows) and third(cols) for pixel location
 int num_features0[10][IMAGE_DIM][IMAGE_DIM]; //used to store number of background features in this position from training set
 int num_features1[10][IMAGE_DIM][IMAGE_DIM];
-int odds_ratio[IMAGE_DIM][IMAGE_DIM];
+double odds_ratio[IMAGE_DIM][IMAGE_DIM];
 
 double likelihoods0[10][IMAGE_DIM][IMAGE_DIM]; //used to store likelihoods of background feature
 double likelihoods1[10][IMAGE_DIM][IMAGE_DIM]; //used to store likelihoods of foreground feature
@@ -222,28 +222,61 @@ void output_odds_ratio_map(int c1, int c2, string filename) {
 
 	file.is_open();
 	
+	file << "LIKELIHOOD MAP OF "<< c1 << endl;
+	
+	for (int i = 0; i < IMAGE_DIM; i++) {
+		for (int j = 0; j <IMAGE_DIM; j++) {
+			double probability = likelihoods1[c1][i][j];
+			if (probability < 0.2) {
+				file << ' ';
+			} else if (probability < 0.5) {
+				file << '-';
+			} else {
+				file << '+';
+			}
+		}
+		file << '\n';
+	}
+	
+	file << "LIKELIHOOD MAP OF "<< c2 << endl;
+	
+	for (int i = 0; i < IMAGE_DIM; i++) {
+		for (int j = 0; j <IMAGE_DIM; j++) {
+			double probability = likelihoods1[c2][i][j];
+			if (probability < 0.2) {
+				file << ' ';
+			} else if (probability < 0.5) {
+				file << '-';
+			} else {
+				file << '+';
+			}
+		}
+		file << '\n';
+	}
+	
 	file << "ODDS-RATIO MAP BETWEEN "<< c1 << " AND " << c2 << endl << endl<<endl;
 
-		for (int i=0;i<IMAGE_DIM;i++) {
-			for(int j=0;j<IMAGE_DIM;j++) {
-				if (odds_ratio[i][j] < 0) {
-					file << '-';
-				} else if ((odds_ratio[i][j] >= 0 && odds_ratio[i][j] <= 0.9) || (odds_ratio[i][j] >= 1.1)) {
-					file << '+';
-				} else {
-					file << ' ';
-				}
+	for (int i=0;i<IMAGE_DIM;i++) {
+		for(int j=0;j<IMAGE_DIM;j++) {
+			if (odds_ratio[i][j] <= -0.25) {
+				file << '-';
+			} else if ((odds_ratio[i][j] > 0.28)) {
+				file << ' ';
+			} else {
+				file << '+';
 			}
-			file << '\n';
 		}
-		file.close();
+		file << '\n';
+	}
+	
+	file.close();
 	return;
 }
 
 void calculate_odds_ratios (int c1, int c2, string filename) {
 	for (int i = 0; i < IMAGE_DIM; i++) {
 		for (int j = 0; j <IMAGE_DIM; j++) {
-			odds_ratio[i][j] = likelihoods1[c1][i][j]/likelihoods1[c2][i][j];
+			odds_ratio[i][j] = (likelihoods1[c1][i][j])/likelihoods1[c2][i][j];
 			odds_ratio[i][j] = log(odds_ratio[i][j]);
 		}
 	}
@@ -364,7 +397,8 @@ int main(){
 	}
 	
 	printf("The most confused digits are:\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n", diff4_x, diff4_y, diff4, diff3_x, diff3_y, diff3, diff2_x, diff2_y, diff2, diff1_x, diff1_y, diff1);
-	
+
+	calculate_odds_ratios(1, 8, "Map0.txt");
 	calculate_odds_ratios(diff1_x, diff1_y, "Map1.txt");
 	calculate_odds_ratios(diff2_x, diff2_y, "Map2.txt");
 	calculate_odds_ratios(diff3_x, diff3_y, "Map3.txt");
