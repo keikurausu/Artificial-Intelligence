@@ -1,8 +1,8 @@
-Player Blue expanded 217740 nodes
+Player Blue expanded 11939 nodes
 Player Green expanded 12087 nodes
-Average number of nodes expanded by blue per move: 12096.7
+Average number of nodes expanded by blue per move: 663.278
 Average number of nodes expanded by green per move: 671.5
-Player Blue took 265 milliseconds (14.7222ms per move)
+Player Blue took 9 milliseconds (0.5ms per move)
 Player Green took 9 milliseconds (0.5ms per move)
 Blue total score: 1199
 Green total score: 601

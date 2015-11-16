@@ -221,7 +221,7 @@ int max_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 		for (int j = 0; j < GAME_DIMENSION; j++)
 		{
 			//check if we have reached a terminal node
-			if (depth <= 5 && blocks_occupied + depth - 1 == GAME_DIMENSION*GAME_DIMENSION - 1)
+			if (depth <= 3 && blocks_occupied + depth - 1 == GAME_DIMENSION*GAME_DIMENSION - 1)
 			{
 				if (game_board[i][j].team == OPEN)
 				{
@@ -259,7 +259,7 @@ int max_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 				}
 			}
 			//not at terminal node and depth limit not reached
-			else if (depth < 5)
+			else if (depth < 3)
 			{
 				int local_best;
 				int x_loc; //used to hold return value
@@ -329,7 +329,7 @@ int max_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 				}
 			}
 			/*perform evaluation function since depth limit reached*/
-			else if (depth == 5)
+			else if (depth == 3)
 			{
 				int max_total = 0;
 				int min_total = 0;
@@ -415,7 +415,7 @@ int max_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 			}
 		}
 	}
-	if (depth < 5)
+	if (depth < 3)
 	{
 		return best;
 	}
@@ -435,7 +435,7 @@ int min_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 		for (int j = 0; j < GAME_DIMENSION; j++)
 		{
 			//check if we have reached a terminal node
-			if (depth <= 5 && blocks_occupied + depth - 1 == GAME_DIMENSION*GAME_DIMENSION - 1)
+			if (depth <= 3 && blocks_occupied + depth - 1 == GAME_DIMENSION*GAME_DIMENSION - 1)
 			{
 				if (game_board[i][j].team == OPEN)
 				{
@@ -473,7 +473,7 @@ int min_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 				}
 			}
 			//not at terminal node and depth limit not reached
-			else if (depth < 5)
+			else if (depth < 3)
 			{
 				int local_best;
 				int x_loc; //used to hold return value
@@ -543,7 +543,7 @@ int min_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 				}
 			}
 			/*perform evaluation function since depth limit reached*/
-			else if (depth == 5)
+			else if (depth == 3)
 			{
 				int max_total = 0;
 				int min_total = 0;
@@ -629,7 +629,7 @@ int min_val_alphaBeta(block** game_board, Type Max_team, Type Min_team, int dept
 			}
 		}
 	}
-	if (depth < 5)
+	if (depth < 3)
 	{
 		return best;
 	}
@@ -1075,23 +1075,23 @@ int main()
 	// ALPHABETA VS ALPHABETA
 	//play game using Keren map
 	setup_game(0, alphabeta, alphabeta);
-	output_game("ABvsAB_outputs/Keren_output.txt");
+	output_game("ABvsAB_outputs_depth3/Keren_output.txt");
 	
 	//play game using Narvik map
 	setup_game(1, alphabeta, alphabeta);
-	output_game("ABvsAB_outputs/Narvik_output.txt");
+	output_game("ABvsAB_outputs_depth3/Narvik_output.txt");
 	
 	//play game using Sevastopol map
 	setup_game(2, alphabeta, alphabeta);
-	output_game("ABvsAB_outputs/Sevastopol_output.txt");
+	output_game("ABvsAB_outputs_depth3/Sevastopol_output.txt");
 	
 	//play game using Smolensk map
 	setup_game(3, alphabeta, alphabeta);
-	output_game("ABvsAB_outputs/Smolesnk_output.txt");
+	output_game("ABvsAB_outputs_depth3/Smolesnk_output.txt");
 	
 	//play game using Westerplatte map
 	setup_game(4, alphabeta, alphabeta);
-	output_game("ABvsAB_outputs/Westerplatte_output.txt");
+	output_game("ABvsAB_outputs_depth3/Westerplatte_output.txt");
 	
 	
 	

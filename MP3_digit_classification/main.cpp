@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <math.h>
 
 using namespace std;
 
@@ -25,6 +26,7 @@ double digit_probability[10];
 //first dimension for digit class, second(rows) and third(cols) for pixel location
 int num_features0[10][IMAGE_DIM][IMAGE_DIM]; //used to store number of background features in this position from training set
 int num_features1[10][IMAGE_DIM][IMAGE_DIM];
+int odds_ratio[IMAGE_DIM][IMAGE_DIM];
 
 double likelihoods0[10][IMAGE_DIM][IMAGE_DIM]; //used to store likelihoods of background feature
 double likelihoods1[10][IMAGE_DIM][IMAGE_DIM]; //used to store likelihoods of foreground feature
@@ -196,7 +198,42 @@ void compute_confusion_matrix(){
 	}
 }
 
-void main(){
+void output_odds_ratio_map(int c1, int c2, string filename) {
+	
+	ofstream file(filename);
+
+	file.is_open();
+	
+	file << "ODDS-RATIO MAP BETWEEN "<< c1 << " AND " << c2 << endl << endl<<endl;
+
+		for (int i=0;i<IMAGE_DIM;i++) {
+			for(int j=0;j<IMAGE_DIM;j++) {
+				if (odds_ratio[i][j] < 0) {
+					file << '-';
+				} else if ((odds_ratio[i][j] >= 0 && odds_ratio[i][j] <= 0.8) || (odds_ratio[i][j] >= 1.2)) {
+					file << '+';
+				} else {
+					file << ' ';
+				}
+			}
+			file << '\n';
+		}
+		file.close();
+	return;
+}
+
+void calculate_odds_ratios (int c1, int c2, string filename) {
+	for (int i = 0; i < IMAGE_DIM; i++) {
+		for (int j = 0; j <IMAGE_DIM; j++) {
+			odds_ratio[i][j] = likelihoods1[c1][i][j]/likelihoods1[c2][i][j];
+			odds_ratio[i][j] = log(odds_ratio[i][j]);
+		}
+	}
+	
+	output_odds_ratio_map(c1, c2, filename);
+}
+
+int main(){
 	import_traininglabels("Inputs/traininglabels");
 	import_trainingdata("Inputs/trainingimages");
 	compute_likelihoods();
@@ -220,4 +257,84 @@ void main(){
 		}
 		printf("\n");
 	}
+	
+	float diff1 = 100000000.0;
+	int diff1_x = 0;
+	int diff1_y = 0;
+	
+	float diff2 = 100000000.0;
+	int diff2_x = 0;
+	int diff2_y = 0;
+	
+	float diff3 = 100000000.0;
+	int diff3_x = 0;
+	int diff3_y = 0;
+	
+	float diff4 = 100000000.0;
+	int diff4_x = 0;
+	int diff4_y = 0;
+	
+	for (int i = 0; i <  10; i++) {
+		for (int j = 0; j < 10; j++) {
+			if (i == j)
+				continue;
+			
+			float diff = confusion_matrix[i][i]/confusion_matrix[i][j];
+			
+			if (diff < diff1) {
+				diff4 = diff3;
+				diff4_x = diff3_x;
+				diff4_y = diff3_y;
+				
+				diff3 = diff2;
+				diff3_x = diff2_x;
+				diff3_y = diff2_y;
+				
+				diff2 = diff1;
+				diff2_x = diff1_x;
+				diff2_y = diff1_y;
+				
+				diff1 = diff;
+				diff1_x = i;
+				diff1_y = j;
+				
+			} else if (diff < diff2) {
+				diff4 = diff3;
+				diff4_x = diff3_x;
+				diff4_y = diff3_y;
+				
+				diff3 = diff2;
+				diff3_x = diff2_x;
+				diff3_y = diff2_y;
+				
+				diff2 = diff;
+				diff2_x = i;
+				diff2_y = j;
+				
+			} else if (diff < diff3) {
+				diff4 = diff3;
+				diff4_x = diff3_x;
+				diff4_y = diff3_y;
+				
+				diff3 = diff;
+				diff3_x = i;
+				diff3_y = j;
+				
+			} else if (diff < diff4) {
+				diff4 = diff;
+				diff4_x = i;
+				diff4_y = j;
+				
+			}
+		}
+	}
+	
+	printf("The most confused digits are:\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n\t%d and %d (ratio in percentages is %f)\n", diff4_x, diff4_y, diff4, diff3_x, diff3_y, diff3, diff2_x, diff2_y, diff2, diff1_x, diff1_y, diff1);
+	
+	calculate_odds_ratios(diff1_x, diff1_y, "Map1.txt");
+	calculate_odds_ratios(diff2_x, diff2_y, "Map2.txt");
+	calculate_odds_ratios(diff3_x, diff3_y, "Map3.txt");
+	calculate_odds_ratios(diff4_x, diff4_y, "Map4.txt");
+	
+	return 0;
 }
