@@ -31,6 +31,11 @@ double likelihoods1[10][IMAGE_DIM][IMAGE_DIM]; //used to store likelihoods of fo
 
 double confusion_matrix[10][10];
 
+double max_posterior_prob[10]; //keep track of max/min posterior probability for each digit
+double min_posterior_prob[10];
+int max_posterior_prob_index[10]; //keep track of index of max/min posterior probability for each digit
+int min_posterior_prob_index[10];
+
 void import_traininglabels(string filename){
 	ifstream file(filename);
 	int row_count = 0;
@@ -158,6 +163,19 @@ void import_testdata(string filename){
 				}
 			}
 			estimated_test_labels[i] = max_digit;
+
+
+			int actual_digit = test_labels[i];
+			int digit_prob = probabilities[actual_digit];
+			//keep track of max/min posterior prob for each digit
+			if (digit_prob > max_posterior_prob[actual_digit]){
+				max_posterior_prob[actual_digit] = digit_prob;
+				max_posterior_prob_index[actual_digit] = i;
+			}
+			if (digit_prob < min_posterior_prob[actual_digit]){
+				min_posterior_prob[actual_digit] = digit_prob;
+				min_posterior_prob_index[actual_digit] = i;
+			}
 		}
 		file.close();
 	}
@@ -197,6 +215,14 @@ void compute_confusion_matrix(){
 }
 
 void main(){
+	//clear out arrays
+	for (int i = 0; i < 10; i++){
+		max_posterior_prob[i] = (double)(INT_MIN);
+		min_posterior_prob[i] = (double)(INT_MAX);
+		max_posterior_prob_index[i] = 0;
+		min_posterior_prob_index[i] = 0;
+	}
+
 	import_traininglabels("Inputs/traininglabels");
 	import_trainingdata("Inputs/trainingimages");
 	compute_likelihoods();
@@ -219,5 +245,13 @@ void main(){
 			printf("%f ", confusion_matrix[i][j]);
 		}
 		printf("\n");
+	}
+
+	for (int i = 0; i < 10; i++){
+		printf("Digit: %d\n", i);
+		printf("Max posterior prob: %f\n", max_posterior_prob[i]);
+		printf("Max posterior prob index: %d\n", max_posterior_prob_index[i]);
+		printf("Min posterior prob: %f\n", min_posterior_prob[i]);
+		printf("Min posterior prob index: %d\n", min_posterior_prob_index[i]);
 	}
 }
