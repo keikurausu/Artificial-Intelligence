@@ -443,11 +443,11 @@ void process_training_Bernoulli(string filename, int x)
 			map<string, double>::iterator it;
 			for (it = spam.begin(); it != spam.end(); ++it)
 			{
-				it->second = log(it->second / (SpamCount + K)); //use log so we don't get underflow. K term is for laplace smoothing
+				it->second = log(it->second / (SpamCount + K*2)); //use log so we don't get underflow. K term is for laplace smoothing
 			}
 			for (it = Nspam.begin(); it != Nspam.end(); ++it)
 			{
-				it->second = log(it->second / (NSpamCount + K));
+				it->second = log(it->second / (NSpamCount + K*2));
 			}
 		}
 
@@ -504,11 +504,11 @@ void process_training_Bernoulli(string filename, int x)
 			map<string, double>::iterator it;
 			for (it = Negative.begin(); it != Negative.end(); ++it)
 			{
-				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K)); //use log so we don't get underflow. K term is for laplace smoothing
+				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K*2)); //use log so we don't get underflow. K term is for laplace smoothing
 			}
 			for (it = Positive.begin(); it != Positive.end(); ++it)
 			{
-				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K));
+				it->second = log(it->second / (NUM_MOVIE_TRAINING / 2 + K*2));
 			}
 		}
 	}
