@@ -16,6 +16,8 @@ int test_labels[NUM_TEST_LABELS];
 int estimated_test_labels[NUM_TEST_LABELS];
 double weight_vectors[10][IMAGE_DIM][IMAGE_DIM];
 double current_digit[IMAGE_DIM][IMAGE_DIM];
+double weight_bias[10];
+int digits_accessed[NUM_TRAINING_LABELS];
 
 double epoch = 0;
 double alpha = 1;
@@ -51,6 +53,8 @@ void classify(int * predicted_digit) {
 			}
 		} //output for the current digit likelihood has been calculated
 
+		current_digit_likelihood = current_digit_likelihood + weight_bias[i]*1;
+		
 		if (current_digit_likelihood > max_likelihood) {
 			max_likelihood = current_digit_likelihood;
 			*predicted_digit = i;
@@ -64,6 +68,8 @@ void update_weights(int predicted_digit, int actual_digit) {
 			weight_vectors[actual_digit][i][j] = weight_vectors[actual_digit][i][j] + alpha*current_digit[i][j];
 			weight_vectors[predicted_digit][i][j] = weight_vectors[predicted_digit][i][j] - alpha*current_digit[i][j];
 		}
+		weight_bias[actual_digit] = weight_bias[actual_digit] + alpha*1;
+		weight_bias[predicted_digit] = weight_bias[predicted_digit] - alpha*1;
 	}
 }
 
@@ -75,10 +81,26 @@ void process_trainingdata(string filename){
 	
 	if (file.is_open()){
 		
-		while (accuracy < 99.99) {
+		while (epoch < 150 && accuracy != 100.0) {
 			incorrect = 0;
+			
+			for (int i =0; i <NUM_TRAINING_LABELS; i++) {
+				digits_accessed[i] = 0;
+			}
 			//go through all 5000 digits
 			for (int i = 0; i < NUM_TRAINING_LABELS; i++){
+				
+				int random_digit_index = rand() % 5001;
+				
+				while (digits_accessed[random_digit_index] == 1) {
+					random_digit_index = rand() % 5001;
+				}
+				
+				int actual_digit = training_labels[random_digit_index];
+				digits_accessed[random_digit_index] = 1;
+				
+				file.seekg(29*28*random_digit_index, ios::beg);
+
 				for (int j = 0; j < IMAGE_DIM; j++){	//go through all 28 rows
 					getline(file, line);
 					for (int k = 0; k < IMAGE_DIM; k++){	//go through all 28 columns
@@ -94,13 +116,15 @@ void process_trainingdata(string filename){
 				} // Current Image has been imported at this point
 				
 				classify(&predicted_digit);
-				int actual_digit = training_labels[i];
 				
 				if (predicted_digit != actual_digit) {
 					incorrect++;
 					total_incorrect++;
 					update_weights(predicted_digit, actual_digit);
 				}
+				
+				file.clear();
+				file.seekg(0, ios::beg);
 			}
 			accuracy = 100.0 - (incorrect*100.0/NUM_TRAINING_LABELS);
 			printf("Epoch %.0f, Accuracy Percentage: %.2f\n", epoch, accuracy);
@@ -196,12 +220,14 @@ void compute_confusion_matrix(){
 
 
 int main(){
-	
+	srand (time(NULL));
+
 	//set initial weight wectors for each class
 	for (int i = 0; i < 10; i++){
+		weight_bias[i] = -1.0 + ((double)rand() / RAND_MAX)*2.0;
 		for (int j = 0; j <IMAGE_DIM; j++) {
 			for (int k = 0; k <IMAGE_DIM; k++) {
-				weight_vectors[i][j][k] = 10.0;
+				weight_vectors[i][j][k] = -1.0 + ((double)rand() / RAND_MAX)*2.0;
 			}
 		}
 	}
