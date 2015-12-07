@@ -10,8 +10,8 @@ using namespace std;
 
 #define GRID_DIMENSION 8
 #define IT_NUM 10000
-#define IT_NUM_Q 1500
-#define N_E 400
+#define IT_NUM_Q 4000
+#define N_E 800
 
 enum Type { WALL, TERMINAL, NON_TERMINAL };
 enum Direction { RIGHT, LEFT, UP, DOWN, NONE };
@@ -353,7 +353,7 @@ Direction select_action_exploration(state s){
 	for (int i = 0; i < 4; i++){
 		Direction d = (Direction)i;
 		if (num_actions[s.row][s.col][i] < N_E){	//exploration function, force it to try each direction N_E times
-			cur_value = 3+(std::rand()%100)/100.0;	//best possible reward
+			cur_value = 3+(std::rand()%100)/100.0;	//best possible reward, add some noise
 		}
 		else{
 			//if it collides with wall, use current spots utility
@@ -450,7 +450,7 @@ void reinforcement_iterate(){
 			max_reward = std::max(max_reward, q_values[next_state.row][next_state.col][2]);
 			max_reward = std::max(max_reward, q_values[next_state.row][next_state.col][3]);
 
-			learning_rate = 60.0 / (59.0 + time);
+			learning_rate = 60.0 / (59.0+time);
 			q_values[cur_state.row][cur_state.col][action] = q_values[cur_state.row][cur_state.col][action] + 0.25*(gridWorld[cur_state.row][cur_state.col].reward + gamma*max_reward - q_values[cur_state.row][cur_state.col][action]);
 
 			num_actions[cur_state.row][cur_state.col][action]++;
@@ -460,7 +460,7 @@ void reinforcement_iterate(){
 
 		//update and output utility
 		calculate_utility();
-		if (i % 10 == 0)
+		if (i % 50 == 0)
 			printf("%d: %f\n", i, calculate_rms_error());
 	}
 }
@@ -553,64 +553,17 @@ int main()
 			}
 			else{
 				//right, left, up, down
-				if (gridWorld[i][j + 1].type == WALL)
-					q_values[i][j][0] = forwardProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][0] = forwardProb*gridWorld[i][j + 1].reward;
-				if (gridWorld[i - 1][j].type == WALL)
-					q_values[i][j][0] = q_values[i][j][0] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][0] = q_values[i][j][0] + turnProb*gridWorld[i - 1][j].reward;
-				if (gridWorld[i + 1][j].type == WALL)
-					q_values[i][j][0] = q_values[i][j][0] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][0] = q_values[i][j][0] + turnProb*gridWorld[i + 1][j].reward;
-
-				if (gridWorld[i][j - 1].type == WALL)
-					q_values[i][j][1] = forwardProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][1] = forwardProb*gridWorld[i][j - 1].reward;
-				if (gridWorld[i - 1][j].type == WALL)
-					q_values[i][j][1] = q_values[i][j][1] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][1] = q_values[i][j][1] + turnProb*gridWorld[i - 1][j].reward;
-				if (gridWorld[i + 1][j].type == WALL)
-					q_values[i][j][1] = q_values[i][j][1] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][1] = q_values[i][j][1] + turnProb*gridWorld[i + 1][j].reward;
-
-				if (gridWorld[i-1][j].type == WALL)
-					q_values[i][j][2] = forwardProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][2] = forwardProb*gridWorld[i - 1][j].reward;
-				if (gridWorld[i][j - 1].type == WALL)
-					q_values[i][j][2] = q_values[i][j][2] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][2] = q_values[i][j][2] + turnProb*gridWorld[i][j - 1].reward;
-				if (gridWorld[i][j + 1].type == WALL)
-					q_values[i][j][2] = q_values[i][j][2] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][2] = q_values[i][j][2] + turnProb*gridWorld[i][j + 1].reward;
-
-				if (gridWorld[i + 1][j].type == WALL)
-					q_values[i][j][3] = forwardProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][3] = forwardProb*gridWorld[i + 1][j].reward;
-				if (gridWorld[i][j - 1].type == WALL)
-					q_values[i][j][3] = q_values[i][j][3] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][3] = q_values[i][j][3] + turnProb*gridWorld[i][j - 1].reward;
-				if (gridWorld[i][j + 1].type == WALL)
-					q_values[i][j][3] = q_values[i][j][3] + turnProb*gridWorld[i][j].reward;
-				else
-					q_values[i][j][3] = q_values[i][j][3] + turnProb*gridWorld[i][j + 1].reward;
+				q_values[i][j][0] = 0;
+				q_values[i][j][1] = 0;
+				q_values[i][j][2] = 0;
+				q_values[i][j][3] = 0;
 			}
 		}
 	}
+
 	reinforcement_iterate();
 	calculate_utility();
 	Output("MDPoutput3.txt");
-
 
 	/*memory cleanup*/
 	for (int i = 0; i < GRID_DIMENSION; i++)
