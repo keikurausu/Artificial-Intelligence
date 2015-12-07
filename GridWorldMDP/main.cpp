@@ -9,7 +9,7 @@
 using namespace std;
 
 #define GRID_DIMENSION 8
-#define IT_NUM 10000
+#define IT_NUM 3000
 #define IT_NUM_Q 4000
 #define N_E 800
 
@@ -209,135 +209,135 @@ state perform_action(state cur_state, Direction action){
 	new_state.col = 0;
 
 	/*	generate a random number between 0 and 99
-		if r is between 0 and 79, it does correct action
-		if r is between 80 and 89, it goes left of correct action
-		if r is between 90 and 99, it goes right of correct action*/
-	int r = std::rand()%100;
+	if r is between 0 and 79, it does correct action
+	if r is between 80 and 89, it goes left of correct action
+	if r is between 90 and 99, it goes right of correct action*/
+	int r = std::rand() % 100;
 	if (action == RIGHT){
 		if (r <= 79){	//actually goes right
-			if (gridWorld[cur_state.row][cur_state.col+1].type == WALL){	//cant run into wall, so stay put
+			if (gridWorld[cur_state.row][cur_state.col + 1].type == WALL){	//cant run into wall, so stay put
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{	//no obstacle so move right
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col+1;
+				new_state.col = cur_state.col + 1;
 			}
 		}
 		else if (r <= 89){	//goes up
-			if (gridWorld[cur_state.row-1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row - 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row-1;
+				new_state.row = cur_state.row - 1;
 				new_state.col = cur_state.col;
 			}
 		}
 		else{	//goes down
-			if (gridWorld[cur_state.row+1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row + 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row+1;
+				new_state.row = cur_state.row + 1;
 				new_state.col = cur_state.col;
 			}
 		}
 	}
 	else if (action == LEFT){
 		if (r <= 79){	//actually goes left
-			if (gridWorld[cur_state.row][cur_state.col-1].type == WALL){
+			if (gridWorld[cur_state.row][cur_state.col - 1].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col-1;
+				new_state.col = cur_state.col - 1;
 			}
 		}
 		else if (r <= 89){	//goes down
-			if (gridWorld[cur_state.row+1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row + 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row+1;
+				new_state.row = cur_state.row + 1;
 				new_state.col = cur_state.col;
 			}
 		}
 		else{	//goes up
-			if (gridWorld[cur_state.row-1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row - 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row-1;
+				new_state.row = cur_state.row - 1;
 				new_state.col = cur_state.col;
 			}
 		}
 	}
 	else if (action == UP){
 		if (r <= 79){	//actually goes up
-			if (gridWorld[cur_state.row-1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row - 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row-1;
+				new_state.row = cur_state.row - 1;
 				new_state.col = cur_state.col;
 			}
 		}
 		else if (r <= 89){	//goes left
-			if (gridWorld[cur_state.row][cur_state.col-1].type == WALL){
+			if (gridWorld[cur_state.row][cur_state.col - 1].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col-1;
+				new_state.col = cur_state.col - 1;
 			}
 		}
 		else{	//goes right
-			if (gridWorld[cur_state.row][cur_state.col+1].type == WALL){
+			if (gridWorld[cur_state.row][cur_state.col + 1].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col+1;
+				new_state.col = cur_state.col + 1;
 			}
 		}
 	}
 	else if (action == DOWN){
 		if (r <= 79){	//actually goes down
-			if (gridWorld[cur_state.row+1][cur_state.col].type == WALL){
+			if (gridWorld[cur_state.row + 1][cur_state.col].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
-				new_state.row = cur_state.row+1;
+				new_state.row = cur_state.row + 1;
 				new_state.col = cur_state.col;
 			}
 		}
 		else if (r <= 89){	//goes right
-			if (gridWorld[cur_state.row][cur_state.col+1].type == WALL){
+			if (gridWorld[cur_state.row][cur_state.col + 1].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col+1;
+				new_state.col = cur_state.col + 1;
 			}
 		}
 		else{	//goes left
-			if (gridWorld[cur_state.row][cur_state.col-1].type == WALL){
+			if (gridWorld[cur_state.row][cur_state.col - 1].type == WALL){
 				new_state.row = cur_state.row;
 				new_state.col = cur_state.col;
 			}
 			else{
 				new_state.row = cur_state.row;
-				new_state.col = cur_state.col-1;
+				new_state.col = cur_state.col - 1;
 			}
 		}
 	}
@@ -353,7 +353,7 @@ Direction select_action_exploration(state s){
 	for (int i = 0; i < 4; i++){
 		Direction d = (Direction)i;
 		if (num_actions[s.row][s.col][i] < N_E){	//exploration function, force it to try each direction N_E times
-			cur_value = 3+(std::rand()%100)/100.0;	//best possible reward, add some noise
+			cur_value = 3 + (std::rand() % 100) / 100.0;	//best possible reward, add some noise
 		}
 		else{
 			//if it collides with wall, use current spots utility
@@ -450,7 +450,7 @@ void reinforcement_iterate(){
 			max_reward = std::max(max_reward, q_values[next_state.row][next_state.col][2]);
 			max_reward = std::max(max_reward, q_values[next_state.row][next_state.col][3]);
 
-			learning_rate = 60.0 / (59.0+time);
+			learning_rate = 60.0 / (59.0 + time);
 			q_values[cur_state.row][cur_state.col][action] = q_values[cur_state.row][cur_state.col][action] + 0.25*(gridWorld[cur_state.row][cur_state.col].reward + gamma*max_reward - q_values[cur_state.row][cur_state.col][action]);
 
 			num_actions[cur_state.row][cur_state.col][action]++;
@@ -543,8 +543,8 @@ int main()
 		}
 	}
 	//calculate initial q values
-	for (int i = 1; i < GRID_DIMENSION-1; i++){
-		for (int j = 1; j < GRID_DIMENSION-1; j++){
+	for (int i = 1; i < GRID_DIMENSION - 1; i++){
+		for (int j = 1; j < GRID_DIMENSION - 1; j++){
 			if (gridWorld[i][j].type == TERMINAL || gridWorld[i][j].type == WALL){	//reward doesnt change
 				q_values[i][j][0] = gridWorld[i][j].reward;
 				q_values[i][j][1] = gridWorld[i][j].reward;
@@ -574,4 +574,3 @@ int main()
 
 	return 0;
 }
-
